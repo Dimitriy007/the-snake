@@ -40,7 +40,6 @@ pygame.display.set_caption('Змейка')
 clock = pygame.time.Clock()
 
 
-# Описание всех классов игры.
 class GameObject:
     """Базовый класс для игровых объектов."""
 
@@ -51,7 +50,9 @@ class GameObject:
 
     def draw(self):
         """Абстрактный метод для отрисовки объекта на экране."""
-        pass
+        raise NotImplementedError(
+            'Метод draw должен быть переопределен.'
+        )
 
 
 class Apple(GameObject):
@@ -67,13 +68,15 @@ class Apple(GameObject):
         if occupied_positions is None:
             occupied_positions = []
 
-        while True:
+        self.position = (
+            randint(0, GRID_WIDTH - 1) * GRID_SIZE,
+            randint(0, GRID_HEIGHT - 1) * GRID_SIZE
+        )
+        while self.position in occupied_positions:
             self.position = (
                 randint(0, GRID_WIDTH - 1) * GRID_SIZE,
                 randint(0, GRID_HEIGHT - 1) * GRID_SIZE
             )
-            if self.position not in occupied_positions:
-                break
 
     def draw(self):
         """Отрисовывает яблоко на игровом поле."""
@@ -111,23 +114,18 @@ class Snake(GameObject):
     def move(self):
         """Обновляет позицию змейки с учетом направления движения."""
         head_x, head_y = self.get_head_position()
-        dir_x, dir_y = self.direction
+        direction_x, direction_y = self.direction
 
         # Вычисляем новые координаты головы с учетом сквозных границ
-        new_x = (head_x + dir_x * GRID_SIZE) % SCREEN_WIDTH
-        new_y = (head_y + dir_y * GRID_SIZE) % SCREEN_HEIGHT
+        new_x = (head_x + direction_x * GRID_SIZE) % SCREEN_WIDTH
+        new_y = (head_y + direction_y * GRID_SIZE) % SCREEN_HEIGHT
         new_head = (new_x, new_y)
 
-        # Проверка на столкновение со своим телом
-        if new_head in self.positions[2:]:
-            self.reset()
-            screen.fill(BOARD_BACKGROUND_COLOR)
+        self.positions.insert(0, new_head)
+        if len(self.positions) > self.length:
+            self.last = self.positions.pop()
         else:
-            self.positions.insert(0, new_head)
-            if len(self.positions) > self.length:
-                self.last = self.positions.pop()
-            else:
-                self.last = None
+            self.last = None
 
     def draw(self):
         """Отрисовывает змейку на игровом поле."""
@@ -137,7 +135,10 @@ class Snake(GameObject):
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
         # Отрисовка головы змейки
-        head_rect = pygame.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
+        head_rect = pygame.Rect(
+            self.get_head_position(),
+            (GRID_SIZE, GRID_SIZE)
+        )
         pygame.draw.rect(screen, self.body_color, head_rect)
         pygame.draw.rect(screen, BORDER_COLOR, head_rect, 1)
 
