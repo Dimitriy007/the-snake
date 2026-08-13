@@ -68,10 +68,6 @@ class Apple(GameObject):
         if occupied_positions is None:
             occupied_positions = []
 
-        self.position = (
-            randint(0, GRID_WIDTH - 1) * GRID_SIZE,
-            randint(0, GRID_HEIGHT - 1) * GRID_SIZE
-        )
         while self.position in occupied_positions:
             self.position = (
                 randint(0, GRID_WIDTH - 1) * GRID_SIZE,
@@ -184,6 +180,11 @@ def main():
         handle_keys(snake)
         snake.update_direction()
         snake.move()
+
+        # Проверка столкновения змейки с самой собой
+        if snake.get_head_position() in snake.positions[1:]:
+            snake.reset()
+            screen.fill(BOARD_BACKGROUND_COLOR)
 
         # Проверка съедания яблока
         if snake.get_head_position() == apple.position:
